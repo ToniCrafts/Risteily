@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botskipojat merellä taas...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #003f7f 0%, #0066cc 50%, #004d99 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #ffffff;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 800px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      color: #ffffff;
+    }
+
+    .wave {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      animation: sway 2.5s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    .countdown-box {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 40px 30px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 40px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .countdown-label {
+      font-size: 1rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #aad4ff;
+      margin-bottom: 25px;
+    }
+
+    .countdown {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 90px;
+    }
+
+    .number {
+      font-size: 3.5rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      transition: background 0.3s;
+    }
+
+    .number:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .unit-label {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #aad4ff;
+    }
+
+    .separator {
+      font-size: 3rem;
+      font-weight: 700;
+      align-self: flex-start;
+      margin-top: 20px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .target-date {
+      font-size: 1rem;
+      color: #aad4ff;
+      margin-top: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* Progress bar */
+    .progress-section {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .progress-title {
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #aad4ff;
+      margin-bottom: 15px;
+    }
+
+    .progress-dates {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #cce4ff;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255,255,255,0.15);
+      border-radius: 50px;
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #66b3ff, #ffffff, #66b3ff);
+      background-size: 200% 100%;
+      border-radius: 50px;
+      transition: width 1s ease;
+      animation: shimmer 2.5s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    .progress-percent {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    @media (max-width: 500px) {
+      h1 { font-size: 1.8rem; }
+      .number { width: 70px; height: 70px; font-size: 2.5rem; }
+      .unit { min-width: 70px; }
+      .separator { font-size: 2rem; margin-top: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Botskipojat merellä taas...</h1>
+    <div class="wave">⛵</div>
+
+    <div class="countdown-box">
+      <div class="countdown-label">Lähtöön aikaa</div>
+      <div class="countdown">
+        <div class="unit">
+          <div class="number" id="days">--</div>
+          <div class="unit-label">Päivää</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="hours">--</div>
+          <div class="unit-label">Tuntia</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="minutes">--</div>
+          <div class="unit-label">Minuuttia</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="seconds">--</div>
+          <div class="unit-label">Sekuntia</div>
+        </div>
+      </div>
+      <div class="target-date">Kohde: 13.11.2026 klo 17:00</div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-title">Matkan edistyminen</div>
+      <div class="progress-dates">
+        <span>10.3.2026</span>
+        <span>13.11.2026</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+      </div>
+      <div class="progress-percent" id="progressText">Lasketaan...</div>
+    </div>
+  </div>
+
+  <script>
+    const target = new Date('2026-11-13T17:00:00');
+    const start  = new Date('2026-03-10T00:00:00');
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function updateCountdown() {
+      const now  = new Date();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        document.getElementById('days').textContent    = '00';
+        document.getElementById('hours').textContent   = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('progressText').textContent = '🎉 Lähtö on täällä!';
+        return;
+      }
+
+      const days    = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('days').textContent    = pad(days);
+      document.getElementById('hours').textContent   = pad(hours);
+      document.getElementById('minutes').textContent = pad(minutes);
+      document.getElementById('seconds').textContent = pad(seconds);
+
+      // Progress bar
+      const total   = target - start;
+      const elapsed = now - start;
+      let pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+
+      document.getElementById('progressBar').style.width = pct.toFixed(2) + '%';
+      document.getElementById('progressText').textContent = pct.toFixed(1) + '% matkasta takana';
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
