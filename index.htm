@@ -190,7 +190,7 @@
 <body>
   <div class="container">
     <h1>Botskipojat merellä taas...</h1>
-    <div class="wave">⛵</div>
+    <div class="wave">🍺🥤</div>
 
     <div class="countdown-box">
       <div class="countdown-label">Lähtöön aikaa</div>
@@ -219,7 +219,7 @@
     </div>
 
     <div class="progress-section">
-      <div class="progress-title">Matkan edistyminen</div>
+      <div class="progress-title">Aika edellisestä risteilystä</div>
       <div class="progress-dates">
         <span>10.3.2026</span>
         <span>13.11.2026</span>
@@ -263,13 +263,20 @@
       document.getElementById('minutes').textContent = pad(minutes);
       document.getElementById('seconds').textContent = pad(seconds);
 
-      // Progress bar
+      // Progress bar — aika edellisestä risteilystä
       const total   = target - start;
       const elapsed = now - start;
       let pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
 
       document.getElementById('progressBar').style.width = pct.toFixed(2) + '%';
-      document.getElementById('progressText').textContent = pct.toFixed(1) + '% matkasta takana';
+
+      // Show elapsed time since last cruise
+      const elapsedMs = Math.max(0, now - start);
+      const eDays    = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+      const eHours   = Math.floor((elapsedMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const eMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+      document.getElementById('progressText').textContent =
+        eDays + ' pv ' + eHours + ' h ' + eMinutes + ' min sitten viime reissusta';
     }
 
     updateCountdown();
