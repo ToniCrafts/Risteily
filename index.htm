@@ -79,7 +79,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 90px;
+      min-width: 120px;
     }
 
     .number {
@@ -88,7 +88,7 @@
       background: rgba(255, 255, 255, 0.15);
       border: 2px solid rgba(255, 255, 255, 0.4);
       border-radius: 12px;
-      width: 90px;
+      width: 120px;
       height: 90px;
       display: flex;
       align-items: center;
@@ -181,8 +181,8 @@
 
     @media (max-width: 500px) {
       h1 { font-size: 1.8rem; }
-      .number { width: 70px; height: 70px; font-size: 2.5rem; }
-      .unit { min-width: 70px; }
+      .number { width: 92px; height: 70px; font-size: 2.5rem; }
+      .unit { min-width: 92px; }
       .separator { font-size: 2rem; margin-top: 15px; }
     }
   </style>
@@ -215,14 +215,14 @@
           <div class="unit-label">Sekuntia</div>
         </div>
       </div>
-      <div class="target-date">Kohde: 13.11.2026 klo 17:00</div>
+      <div class="target-date">Kohde: 6.11.2026 klo 17:00</div>
     </div>
 
     <div class="progress-section">
       <div class="progress-title">Aika edellisestä risteilystä</div>
       <div class="progress-dates">
         <span>12.4.2026</span>
-        <span>13.11.2026</span>
+        <span>6.11.2026</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
@@ -232,7 +232,7 @@
   </div>
 
   <script>
-    const target = new Date('2026-11-13T17:00:00');
+    const target = new Date('2026-11-06T17:00:00');
     const start  = new Date('2026-04-12T10:00:00');
 
     function pad(n) {
