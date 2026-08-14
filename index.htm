@@ -218,6 +218,32 @@
       <div class="target-date">Kohde: 6.11.2026 klo 17:00</div>
     </div>
 
+    <div class="countdown-box">
+      <div class="countdown-label">Lähtöön aikaa - Raviristeily</div>
+      <div class="countdown">
+        <div class="unit">
+          <div class="number" id="days2">--</div>
+          <div class="unit-label">Päivää</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="hours2">--</div>
+          <div class="unit-label">Tuntia</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="minutes2">--</div>
+          <div class="unit-label">Minuuttia</div>
+        </div>
+        <div class="separator">:</div>
+        <div class="unit">
+          <div class="number" id="seconds2">--</div>
+          <div class="unit-label">Sekuntia</div>
+        </div>
+      </div>
+      <div class="target-date">Kohde: 28.5.2027 klo 20:15</div>
+    </div>
+
     <div class="progress-section">
       <div class="progress-title">Aika edellisestä risteilystä</div>
       <div class="progress-dates">
@@ -281,6 +307,34 @@
 
     updateCountdown();
     setInterval(updateCountdown, 1000);
+
+    const target2 = new Date('2027-05-28T20:15:00');
+
+    function updateCountdown2() {
+      const now  = new Date();
+      const diff = target2 - now;
+
+      if (diff <= 0) {
+        document.getElementById('days2').textContent    = '00';
+        document.getElementById('hours2').textContent   = '00';
+        document.getElementById('minutes2').textContent = '00';
+        document.getElementById('seconds2').textContent = '00';
+        return;
+      }
+
+      const days    = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('days2').textContent    = pad(days);
+      document.getElementById('hours2').textContent   = pad(hours);
+      document.getElementById('minutes2').textContent = pad(minutes);
+      document.getElementById('seconds2').textContent = pad(seconds);
+    }
+
+    updateCountdown2();
+    setInterval(updateCountdown2, 1000);
   </script>
 </body>
 </html>
