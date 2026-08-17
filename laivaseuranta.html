@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M/S Silja Serenade — Reittiseuranta</title>
+<style>
+  :root{
+    --bg:#04120c;
+    --panel:#071b13;
+    --grid:#0e3324;
+    --phosphor:#3dffa0;
+    --phosphor-dim:#1c6b48;
+    --amber:#ffb347;
+    --red:#ff5c5c;
+    --glow: 0 0 6px rgba(61,255,160,.9), 0 0 14px rgba(61,255,160,.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(ellipse at center, #082016 0%, #030d09 75%, #010604 100%);
+    font-family:'Courier New', Consolas, monospace;
+    color:var(--phosphor);
+  }
+  body{
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .screen{
+    position:relative;
+    width:100%;
+    max-width:1180px;
+    background:var(--bg);
+    border:2px solid var(--phosphor-dim);
+    border-radius:10px;
+    box-shadow:0 0 0 6px #010603, 0 0 40px rgba(61,255,160,.15), inset 0 0 80px rgba(0,0,0,.6);
+    overflow:hidden;
+  }
+  .scanlines{
+    pointer-events:none;
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.18) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    mix-blend-mode:multiply;
+    z-index:5;
+    animation:flicker 6s infinite;
+  }
+  @keyframes flicker{
+    0%,96%,100%{opacity:1;}
+    97%{opacity:.85;}
+    98%{opacity:1;}
+    99%{opacity:.9;}
+  }
+  header{
+    padding:16px 22px 6px;
+    text-align:center;
+    border-bottom:1px solid var(--grid);
+  }
+  header h1{
+    margin:0;
+    font-size:1.5rem;
+    letter-spacing:3px;
+    text-shadow:var(--glow);
+  }
+  header .sub{
+    margin-top:4px;
+    font-size:.75rem;
+    letter-spacing:2px;
+    color:var(--phosphor-dim);
+  }
+  a.backlink{
+    display:inline-block;
+    margin-top:8px;
+    font-size:.7rem;
+    color:var(--amber);
+    text-decoration:none;
+    letter-spacing:1px;
+    border:1px solid var(--phosphor-dim);
+    padding:3px 10px;
+    border-radius:4px;
+  }
+  a.backlink:hover{ color:var(--bg); background:var(--amber); }
+
+  .layout{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0;
+  }
+  .mapwrap{
+    flex:1 1 620px;
+    min-width:320px;
+    padding:10px;
+  }
+  svg{ width:100%; height:auto; display:block; }
+
+  .panel{
+    flex:0 0 320px;
+    padding:16px 18px;
+    border-left:1px solid var(--grid);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font-size:.85rem;
+  }
+  @media (max-width:900px){
+    .panel{ border-left:none; border-top:1px solid var(--grid); flex:1 1 100%; }
+  }
+
+  .row{
+    display:flex;
+    justify-content:space-between;
+    border-bottom:1px dashed var(--grid);
+    padding-bottom:6px;
+  }
+  .label{ color:var(--phosphor-dim); letter-spacing:1px; }
+  .val{ font-weight:bold; text-shadow:var(--glow); }
+  .val.warn{ color:var(--amber); text-shadow:0 0 6px rgba(255,179,71,.8); }
+  .val.bad{ color:var(--red); text-shadow:0 0 6px rgba(255,92,92,.8); }
+
+  .status-line{
+    display:flex; align-items:center; gap:8px;
+    font-size:.85rem; letter-spacing:1px;
+  }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--phosphor);
+    box-shadow:0 0 8px var(--phosphor);
+    animation:blink 1.4s ease-in-out infinite;
+  }
+  .dot.off{ background:var(--red); box-shadow:0 0 8px var(--red); animation:none; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+
+  .cursor{ animation:blink 1s steps(1) infinite; }
+
+  .controls{
+    margin-top:6px;
+    padding-top:10px;
+    border-top:1px solid var(--grid);
+    font-size:.75rem;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .controls .rowline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  button, .btn{
+    background:var(--bg);
+    color:var(--phosphor);
+    border:1px solid var(--phosphor-dim);
+    padding:5px 10px;
+    font-family:inherit;
+    font-size:.72rem;
+    letter-spacing:1px;
+    cursor:pointer;
+    border-radius:3px;
+  }
+  button:hover{ background:var(--phosphor); color:var(--bg); }
+  input[type=range]{ flex:1; accent-color:var(--phosphor); }
+  label.chk{ display:flex; align-items:center; gap:6px; color:var(--phosphor-dim); }
+
+  footer{
+    padding:10px 18px 16px;
+    font-size:.65rem;
+    color:var(--phosphor-dim);
+    text-align:center;
+    line-height:1.5;
+  }
+  footer a{ color:var(--amber); }
+
+  /* map elements */
+  .land{ fill:#0a2c1e; stroke:var(--phosphor-dim); stroke-width:1.5; }
+  .grid-line{ stroke:var(--grid); stroke-width:1; }
+  .route-base{ fill:none; stroke:var(--phosphor-dim); stroke-width:2; stroke-dasharray:2 6; }
+  .route-glow{ fill:none; stroke:var(--phosphor); stroke-width:3; filter:url(#glow); animation:pulseGlow 2.4s ease-in-out infinite; }
+  @keyframes pulseGlow{ 0%,100%{ opacity:.85; } 50%{ opacity:1; } }
+  .port-dot{ fill:var(--bg); stroke:var(--amber); stroke-width:2; }
+  .port-label{ fill:var(--amber); font-size:13px; letter-spacing:1px; font-family:'Courier New',monospace; }
+  .ship-tri{ fill:var(--phosphor); filter:url(#glow); }
+  .ship-ring{ fill:none; stroke:var(--phosphor); stroke-width:1.5; opacity:.7; transform-origin:center; animation:radarPing 2.2s ease-out infinite; }
+  @keyframes radarPing{
+    0%{ transform:scale(.3); opacity:.9; }
+    100%{ transform:scale(2.6); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="scanlines"></div>
+
+  <header>
+    <h1>M/S SILJA SERENADE</h1>
+    <div class="sub">REITTISEURANTA · HELSINKI ⇄ MAARIANHAMINA ⇄ TUKHOLMA</div>
+    <a class="backlink" href="index.htm">← RISTEILYLASKURI</a>
+  </header>
+
+  <div class="layout">
+    <div class="mapwrap">
+      <svg id="mapSvg" viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- grid -->
+        <g id="gridGroup"></g>
+
+        <!-- landmasses (tyylitelty, ei mittakaavassa) -->
+        <path class="land" d="M 555,0 L 900,0 L 900,150 C 858,158 828,124 792,104
+          C 762,84 742,64 702,58 C 662,52 636,74 604,54 C 578,38 566,18 555,0 Z"/>
+        <path class="land" d="M 0,235 L 172,232 C 152,252 162,282 140,302
+          C 168,320 150,346 122,340 C 104,354 108,372 90,362
+          C 70,378 82,402 60,412 C 92,432 58,452 80,472 L 0,480 Z"/>
+        <ellipse class="land" cx="300" cy="92" rx="34" ry="16" transform="rotate(-12 300 92)"/>
+        <ellipse class="land" cx="352" cy="146" rx="20" ry="11" transform="rotate(20 352 146)"/>
+        <ellipse class="land" cx="248" cy="184" rx="16" ry="10" transform="rotate(-10 248 184)"/>
+        <ellipse class="land" cx="322" cy="216" rx="14" ry="9" transform="rotate(30 322 216)"/>
+        <ellipse class="land" cx="382" cy="66" rx="12" ry="8" transform="rotate(5 382 66)"/>
+
+        <text x="740" y="40" class="port-label" fill="#175c3d" font-size="15">SUOMI</text>
+        <text x="300" y="45" class="port-label" fill="#175c3d" font-size="13">AHVENANMAA</text>
+        <text x="45" y="255" class="port-label" fill="#175c3d" font-size="15">RUOTSI</text>
+
+        <!-- route -->
+        <path id="routeBase" class="route-base" d=""/>
+        <path id="routeGlow" class="route-glow" d=""/>
+
+        <!-- ports -->
+        <circle class="port-dot" cx="823" cy="92" r="5"/>
+        <text class="port-label" x="800" y="76">HELSINKI</text>
+
+        <circle class="port-dot" cx="289" cy="111" r="5"/>
+        <text class="port-label" x="220" y="96">MAARIANHAMINA</text>
+
+        <circle class="port-dot" cx="94" cy="348" r="5"/>
+        <text class="port-label" x="30" y="378">TUKHOLMA</text>
+
+        <!-- ship -->
+        <g id="shipMarker" transform="translate(823,92)">
+          <circle class="ship-ring" r="8"/>
+          <polygon class="ship-tri" points="0,-9 6,7 -6,7"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <div class="status-line">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">YHTEYTTÄ MUODOSTETAAN…</span>
+      </div>
+
+      <div class="row"><span class="label">MMSI</span><span class="val">230184000</span></div>
+      <div class="row"><span class="label">SIJAINTI</span><span class="val" id="posVal">--</span></div>
+      <div class="row"><span class="label">NOPEUS</span><span class="val" id="speedVal">--</span></div>
+      <div class="row"><span class="label">SUUNTA</span><span class="val" id="headingVal">--</span></div>
+      <div class="row"><span class="label">AIS-TILA</span><span class="val" id="navStatVal">--</span></div>
+      <div class="row"><span class="label">REITTI</span><span class="val" id="progressVal">--</span></div>
+      <div class="row"><span class="label">PÄIVITETTY</span><span class="val" id="updatedVal">--</span></div>
+
+      <div class="controls">
+        <div class="rowline">
+          <button id="refreshBtn">PÄIVITÄ NYT</button>
+          <span style="color:var(--phosphor-dim)">seur. <span id="countdownVal">60</span>s</span>
+        </div>
+        <div class="rowline">
+          <label class="chk"><input type="checkbox" id="manualToggle"> KÄSIAJO (DEMO)</label>
+        </div>
+        <div class="rowline">
+          <input type="range" id="manualSlider" min="0" max="100" value="0" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Sijaintitieto: Fintraffic / Digitraffic avoin data (meri.digitraffic.fi), AIS-järjestelmästä.
+    Kartta on tyylitelty eikä mittakaavassa. Ahvenanmaan ja Tukholman saariston lähellä
+    AIS-kattavuus Suomen rannikkoasemilta voi ajoittain puuttua — näytöllä näkyy tällöin
+    viimeisin tunnettu sijainti. Käytä KÄSIAJO-tilaa laivan sijainnin näyttämiseen manuaalisesti.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const MMSI = 230184000;
+  const API_URL = 'https://meri.digitraffic.fi/api/ais/v1/locations?mmsi=' + MMSI;
+
+  // Helsinki -> Maarianhamina -> Tukholma, karkea reitti [lon, lat]
+  const ROUTE_LONLAT = [
+    [24.9530, 60.1553], // Helsinki
+    [24.1000, 59.8450], // Porkkala
+    [22.9500, 59.7500], // avomeri
+    [20.9000, 59.8500], // Ahvenanmaan lähestyminen
+    [20.3000, 60.0200], // Föglön salmi
+    [19.9350, 60.0971], // Maarianhamina
+    [19.4500, 59.6500], // Lågskär
+    [18.9000, 59.3000], // Tukholman saariston lähestyminen
+    [18.3500, 59.3800], // sisäsaaristo
+    [18.1090, 59.3554]  // Tukholma
+  ];
+
+  const MAP = { x:40, y:30, w:820, h:400,
+    lonMin:17.6, lonMax:25.3, latMin:59.10, latMax:60.35 };
+
+  function project([lon, lat]){
+    const x = MAP.x + (lon - MAP.lonMin) / (MAP.lonMax - MAP.lonMin) * MAP.w;
+    const y = MAP.y + (MAP.latMax - lat) / (MAP.latMax - MAP.latMin) * MAP.h;
+    return [x, y];
+  }
+
+  const ROUTE_PX = ROUTE_LONLAT.map(project);
+
+  function catmullRomPath(pts){
+    let d = `M ${pts[0][0]},${pts[0][1]} `;
+    for (let i = 0; i < pts.length - 1; i++){
+      const p0 = pts[i === 0 ? i : i - 1];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += `C ${c1x},${c1y} ${c2x},${c2y} ${p2[0]},${p2[1]} `;
+    }
+    return d;
+  }
+
+  const routeD = catmullRomPath(ROUTE_PX);
+  const routeBase = document.getElementById('routeBase');
+  const routeGlow = document.getElementById('routeGlow');
+  routeBase.setAttribute('d', routeD);
+  routeGlow.setAttribute('d', routeD);
+  const totalLen = routeGlow.getTotalLength();
+  routeGlow.style.strokeDasharray = totalLen;
+  routeGlow.style.strokeDashoffset = totalLen;
+
+  // ohut karttaruudukko
+  const gridGroup = document.getElementById('gridGroup');
+  for (let i = 0; i <= 6; i++){
+    const y = MAP.y + i * MAP.h / 6;
+    gridGroup.insertAdjacentHTML('beforeend', `<line class="grid-line" x1="${MAP.x}" y1="${y}" x2="${MAP.x+MAP.w}" y2="${y}"/>`);
+  }
+  for (let i = 0; i <= 8; i++){
+    const x = MAP.x + i * MAP.w / 8;
+    gridGroup.insertAdjacentHTML('beforeend', `<line class="grid-line" x1="${x}" y1="${MAP.y}" x2="${x}" y2="${MAP.y+MAP.h}"/>`);
+  }
+
+  function dist(a, b){ return Math.hypot(b[0]-a[0], b[1]-a[1]); }
+
+  function projectPointToSegment(px, py, a, b){
+    const abx = b[0]-a[0], aby = b[1]-a[1];
+    const len2 = abx*abx + aby*aby;
+    let t = len2 === 0 ? 0 : ((px-a[0])*abx + (py-a[1])*aby) / len2;
+    t = Math.max(0, Math.min(1, t));
+    const cx = a[0] + abx*t, cy = a[1] + aby*t;
+    return { t, d2:(px-cx)**2 + (py-cy)**2 };
+  }
+
+  function progressFromLonLat(lon, lat){
+    const [px, py] = project([lon, lat]);
+    const segLens = [];
+    for (let i = 0; i < ROUTE_PX.length - 1; i++) segLens.push(dist(ROUTE_PX[i], ROUTE_PX[i+1]));
+    const total = segLens.reduce((a,b)=>a+b, 0);
+    let best = Infinity, bestFrac = 0, acc = 0;
+    for (let i = 0; i < ROUTE_PX.length - 1; i++){
+      const { t, d2 } = projectPointToSegment(px, py, ROUTE_PX[i], ROUTE_PX[i+1]);
+      if (d2 < best){ best = d2; bestFrac = (acc + t*segLens[i]) / total; }
+      acc += segLens[i];
+    }
+    return Math.max(0, Math.min(1, bestFrac));
+  }
+
+  const shipMarker = document.getElementById('shipMarker');
+
+  function placeShip(progress, headingDeg){
+    const len = totalLen * progress;
+    const pt = routeGlow.getPointAtLength(len);
+    routeGlow.style.strokeDashoffset = totalLen * (1 - progress);
+    const rot = (headingDeg === null || headingDeg === undefined) ? 0 : headingDeg;
+    shipMarker.setAttribute('transform', `translate(${pt.x},${pt.y}) rotate(${rot})`);
+  }
+
+  const el = {
+    statusDot: document.getElementById('statusDot'),
+    statusText: document.getElementById('statusText'),
+    pos: document.getElementById('posVal'),
+    speed: document.getElementById('speedVal'),
+    heading: document.getElementById('headingVal'),
+    navStat: document.getElementById('navStatVal'),
+    progress: document.getElementById('progressVal'),
+    updated: document.getElementById('updatedVal'),
+    countdown: document.getElementById('countdownVal'),
+    manualToggle: document.getElementById('manualToggle'),
+    manualSlider: document.getElementById('manualSlider'),
+    refreshBtn: document.getElementById('refreshBtn')
+  };
+
+  const NAVSTAT = {
+    0:'Käynnissä (kone)', 1:'Ankkurissa', 2:'Ei komennettavissa',
+    3:'Rajoitettu ohjailukyky', 5:'Kiinnitetty laituriin', 8:'Purjehtii'
+  };
+
+  function fmtTime(d){
+    return d.toLocaleTimeString('fi-FI', { timeZone:'Europe/Helsinki', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  let manualMode = false;
+
+  async function fetchLive(){
+    if (manualMode) return;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(API_URL, { signal: ctrl.signal, cache:'no-store' });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const f = data.features && data.features[0];
+      if (!f){
+        el.statusDot.classList.add('off');
+        el.statusText.textContent = 'EI AIS-KATTAVUUTTA TÄLLÄ ALUEELLA';
+        return;
+      }
+      const [lon, lat] = f.geometry.coordinates;
+      const p = f.properties;
+      const headingRaw = p.heading;
+      const heading = (headingRaw === 511 || headingRaw === undefined) ? p.cog : headingRaw;
+      const progress = progressFromLonLat(lon, lat);
+
+      placeShip(progress, heading);
+
+      el.statusDot.classList.remove('off');
+      el.statusText.textContent = 'AIS-YHTEYS AKTIIVINEN';
+      el.pos.textContent = lat.toFixed(4) + '°N, ' + lon.toFixed(4) + '°E';
+      el.speed.textContent = p.sog.toFixed(1) + ' kn';
+      el.heading.textContent = (heading !== undefined ? Math.round(heading) : '--') + '°';
+      el.navStat.textContent = NAVSTAT[p.navStat] || ('koodi ' + p.navStat);
+      el.progress.textContent = Math.round(progress * 100) + ' %';
+      el.updated.textContent = fmtTime(new Date(p.timestampExternal));
+    } catch (err){
+      el.statusDot.classList.add('off');
+      el.statusText.textContent = 'EI YHTEYTTÄ AIS-DATAAN';
+    }
+  }
+
+  el.manualToggle.addEventListener('change', () => {
+    manualMode = el.manualToggle.checked;
+    el.manualSlider.disabled = !manualMode;
+    if (manualMode){
+      el.statusDot.classList.add('off');
+      el.statusText.textContent = 'KÄSIAJO — DEMOSIJAINTI';
+      applyManual();
+    } else {
+      fetchLive();
+    }
+  });
+
+  function applyManual(){
+    const progress = Number(el.manualSlider.value) / 100;
+    placeShip(progress, null);
+    el.pos.textContent = '(käsiajo)';
+    el.speed.textContent = '--';
+    el.heading.textContent = '--';
+    el.navStat.textContent = '--';
+    el.progress.textContent = Math.round(progress * 100) + ' %';
+    el.updated.textContent = fmtTime(new Date());
+  }
+
+  el.manualSlider.addEventListener('input', applyManual);
+  el.refreshBtn.addEventListener('click', () => { if (!manualMode) fetchLive(); });
+
+  let countdown = 60;
+  setInterval(() => {
+    if (manualMode) return;
+    countdown -= 1;
+    if (countdown <= 0){ countdown = 60; fetchLive(); }
+    el.countdown.textContent = countdown;
+  }, 1000);
+
+  fetchLive();
+})();
+</script>
+</body>
+</html>
